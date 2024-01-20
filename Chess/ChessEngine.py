@@ -76,20 +76,51 @@ class GameState:
                 if self.board[r + 1][c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
 
+    def get_linear_moves(self, r, c, moves, directions, move_range):
+        enemy_color = "b" if self.isWhiteToMove else "w"
+        for d in directions:
+            for i in range(1, (move_range + 1)):
+                destination_row = r + d[0] * i
+                destination_col = c + d[1] * i
+                if 0 <= destination_row < 8 and 0 <= destination_col < 8:
+                    destination_square = self.board[destination_row][destination_col]
+                    if destination_square == "--":
+                        moves.append(Move((r, c), (destination_row, destination_col), self.board))
+                    elif destination_square[0] == enemy_color:
+                        moves.append(Move((r, c), (destination_row, destination_col), self.board))
+                        break
+                    else:
+                        break
+                else:
+                    break
+
     def get_rook_moves(self, r, c, moves):
-        pass
+        directions = ((0, -1), (-1, 0), (0, 1), (1, 0))
+        self.get_linear_moves(r, c, moves, directions, 7)
 
     def get_knight_moves(self, r, c, moves):
-        pass
+        knight_moves = ((1, 2), (-1, 2), (1, -2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1))
+        ally_color = "w" if self.isWhiteToMove else "b"
+
+        for m in knight_moves:
+            destination_row = r + m[0]
+            destination_col = c + m[1]
+            if 0 <= destination_row < 8 and 0 <= destination_col < 8:
+                destination_square = self.board[destination_row][destination_col]
+                if destination_square[0] != ally_color:
+                    moves.append(Move((r, c), (destination_row, destination_col), self.board))
 
     def get_bishop_moves(self, r, c, moves):
-        pass
+        directions = ((1, 1), (-1, -1), (1, -1), (-1, 1))
+        self.get_linear_moves(r, c, moves, directions, 7)
 
     def get_queen_moves(self, r, c, moves):
-        pass
+        self.get_rook_moves(r, c, moves)
+        self.get_bishop_moves(r, c, moves)
 
     def get_king_moves(self, r, c, moves):
-        pass
+        directions = ((0, -1), (-1, 0), (0, 1), (1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1))
+        self.get_linear_moves(r, c, moves, directions, 1)
 
 
 class Move:

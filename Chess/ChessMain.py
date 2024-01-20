@@ -7,11 +7,15 @@ BOARD_DIMENSIONS = 8
 SQ_SIZE = WIDTH // BOARD_DIMENSIONS
 PIECES = ["wR", "wN", "wB", "wQ", "wK", "wP", "bR", "bN", "bB", "bQ", "bK", "bP"]
 IMAGES = {}
+SOUNDS = {}
 
 
-def load_images():
+def load_resources():
     for piece in PIECES:
         IMAGES[piece] = p.image.load("images/" + piece + ".png")
+
+    SOUNDS["move"] = p.mixer.Sound("sounds/move.mp3")
+    SOUNDS["capture"] = p.mixer.Sound("sounds/capture.mp3")
 
 
 def draw_game_state(screen, gs):
@@ -37,22 +41,19 @@ def draw_pieces(screen, board):
 
 def main():
     p.init()
-
+    p.mixer.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     p.display.set_caption("Chess")
-
     clock = p.time.Clock()
-
     gs = ChessEngine.GameState()
-
-    load_images()
-
+    load_resources()
     valid_moves = gs.get_valid_moves()
-    move_made = False
 
+    move_made = False
     running = True
     square_selected = ()
     player_clicks = []
+
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -70,17 +71,19 @@ def main():
                     location = p.mouse.get_pos()
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
-                    if square_selected == (row, col):
-                        square_selected = ()
-                        player_clicks = []
-                    else:
+
+                    if (player_clicks == [] and gs.board[row][col] != "--") or (not (player_clicks == [])):
                         square_selected = (row, col)
                         player_clicks.append(square_selected)
+
                     if len(player_clicks) == 2:
                         move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
                         if move in valid_moves:
                             gs.make_move(move)
-                            print(move.get_chess_notation())
+                            if move.piece_captured == "--":
+                                SOUNDS["move"].play()
+                            else:
+                                SOUNDS["capture"].play()
                             move_made = True
 
                         square_selected = ()
@@ -89,10 +92,13 @@ def main():
                     square_selected = ()
                     player_clicks = []
 
+                if mouse_buttons[1]:
+                    gs.undo_move()
+                    move_made = True
+
         if move_made:
             valid_moves = gs.get_valid_moves()
             move_made = False
-
 
         draw_game_state(screen, gs)
 
