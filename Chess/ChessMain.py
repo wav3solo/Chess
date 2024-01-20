@@ -47,30 +47,52 @@ def main():
 
     load_images()
 
+    valid_moves = gs.get_valid_moves()
+    move_made = False
+
     running = True
     square_selected = ()
     player_clicks = []
     while running:
-        keys = p.key.get_pressed()
         for e in p.event.get():
-            if (e.type == p.QUIT) or (keys[p.K_ESCAPE]):
+            if e.type == p.QUIT:
                 running = False
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_LEFT:
+                    gs.undo_move()
+                    move_made = True
+                elif e.key == p.K_q or e.key == p.K_ESCAPE:
+                    running = False
+
             elif e.type == p.MOUSEBUTTONDOWN:
-                location = p.mouse.get_pos()
-                col = location[0] // SQ_SIZE
-                row = location[1] // SQ_SIZE
-                if square_selected == (row, col):
+                mouse_buttons = p.mouse.get_pressed()
+                if mouse_buttons[0]:
+                    location = p.mouse.get_pos()
+                    col = location[0] // SQ_SIZE
+                    row = location[1] // SQ_SIZE
+                    if square_selected == (row, col):
+                        square_selected = ()
+                        player_clicks = []
+                    else:
+                        square_selected = (row, col)
+                        player_clicks.append(square_selected)
+                    if len(player_clicks) == 2:
+                        move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
+                        if move in valid_moves:
+                            gs.make_move(move)
+                            print(move.get_chess_notation())
+                            move_made = True
+
+                        square_selected = ()
+                        player_clicks = []
+                if mouse_buttons[2]:
                     square_selected = ()
                     player_clicks = []
-                else:
-                    square_selected = (row, col)
-                    player_clicks.append(square_selected)
-                if len(player_clicks) == 2:
-                    move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
-                    gs.make_move(move)
-                    print(move.get_chess_notation())
-                    square_selected = ()
-                    player_clicks = []
+
+        if move_made:
+            valid_moves = gs.get_valid_moves()
+            move_made = False
+
 
         draw_game_state(screen, gs)
 
