@@ -72,7 +72,10 @@ def main():
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
 
-                    if (player_clicks == [] and gs.board[row][col] != "--") or (not (player_clicks == [])):
+                    if square_selected == (row, col):
+                        square_selected = ();
+                        player_clicks = []
+                    else:
                         square_selected = (row, col)
                         player_clicks.append(square_selected)
 
@@ -80,14 +83,13 @@ def main():
                         move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
                         if move in valid_moves:
                             gs.make_move(move)
-                            if move.piece_captured == "--":
-                                SOUNDS["move"].play()
-                            else:
-                                SOUNDS["capture"].play()
+                            SOUNDS["move"].play() if move.piece_captured == "--" else SOUNDS["capture"].play()
                             move_made = True
+                            square_selected = ()
+                            player_clicks = []
+                        else:
+                            player_clicks = [square_selected]
 
-                        square_selected = ()
-                        player_clicks = []
                 if mouse_buttons[2]:
                     square_selected = ()
                     player_clicks = []
