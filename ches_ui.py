@@ -1,5 +1,5 @@
 import pygame as p
-from Chess.chess_engine.move import Move
+from chess_engine.move import Move
 
 
 class ChessUI:
@@ -62,37 +62,28 @@ class ChessUI:
                     exit()
 
             elif e.type == p.MOUSEBUTTONDOWN:
-                mouse_buttons = p.mouse.get_pressed()
-                if mouse_buttons[0]:
-                    location = p.mouse.get_pos()
-                    col = location[0] // self.square_size
-                    row = location[1] // self.square_size
+                location = p.mouse.get_pos()
+                col = location[0] // self.square_size
+                row = location[1] // self.square_size
 
-                    if self.square_selected == (row, col):
-                        square_selected = ()
+                if self.square_selected == (row, col):
+                    square_selected = ()
+                    self.player_clicks = []
+                else:
+                    square_selected = (row, col)
+                    self.player_clicks.append(square_selected)
+
+                if len(self.player_clicks) == 2:
+                    move = Move(self.player_clicks[0], self.player_clicks[1], gs.board)
+                    if move in self.valid_moves:
+                        gs.make_move(move)
+                        self.sounds["move"].play() if move.piece_captured == "--" else self.sounds["capture"].play()
+
+                        self.move_made = True
+                        self.square_selected = ()
                         self.player_clicks = []
                     else:
-                        square_selected = (row, col)
-                        self.player_clicks.append(square_selected)
-
-                    if len(self.player_clicks) == 2:
-                        move = Move(self.player_clicks[0], self.player_clicks[1], gs.board)
-                        if move in self.valid_moves:
-                            gs.make_move(move)
-                            self.sounds["move"].play() if move.piece_captured == "--" else self.sounds["capture"].play()
-                            self.move_made = True
-                            self.square_selected = ()
-                            self.player_clicks = []
-                        else:
-                            self.player_clicks = [square_selected]
-
-                if mouse_buttons[2]:
-                    self.square_selected = ()
-                    self.player_clicks = []
-
-                if mouse_buttons[1]:
-                    gs.undo_move()
-                    self.move_made = True
+                        self.player_clicks = [square_selected]
 
         if self.move_made:
             self.valid_moves = gs.get_valid_moves()

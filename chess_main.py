@@ -1,6 +1,6 @@
 import pygame as p
-from Chess.chess_engine.game_state import GameState
-from Chess.ches_ui import ChessUI
+from chess_engine.game_state import GameState
+from ches_ui import ChessUI
 
 
 def main():

@@ -1,4 +1,4 @@
-from Chess.chess_engine.move import Move
+from chess_engine.move import Move
 
 
 class GameState:
