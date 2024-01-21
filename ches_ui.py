@@ -1,11 +1,11 @@
 import pygame as p
 from chess_engine.move import Move
-from chess_engine.game_state import GameState
 from chess_engine.game_rules import GameRules
 
 
 class ChessUI:
     def __init__(self, game_state):
+
         self.screen = None
         self.width = self.height = 512
         self.max_fps = 15
@@ -25,7 +25,11 @@ class ChessUI:
         self.square_selected = ()
         self.player_clicks = []
         self.valid_moves = self.game_rules.get_valid_moves()
+
+        self.move = None
         self.move_made = False
+
+        self.undoing_move = None
 
     def load_resources(self):
         for piece in self.pieces:
@@ -59,8 +63,12 @@ class ChessUI:
             if e.type == p.QUIT:
                 exit()
             elif e.type == p.KEYDOWN:
-                if e.key == p.K_LEFT:
+                if e.key == p.K_LEFT or e.key == p.K_SPACE:
                     game_state.undo_move()
+
+                    self.undoing_move = True
+
+                    self.sounds["move"].play()
                     self.move_made = True
                 elif e.key == p.K_q or e.key == p.K_ESCAPE:
                     exit()
@@ -71,24 +79,30 @@ class ChessUI:
                 row = location[1] // self.square_size
 
                 if self.square_selected == (row, col):
-                    square_selected = ()
+                    self.square_selected = ()
                     self.player_clicks = []
                 else:
-                    square_selected = (row, col)
-                    self.player_clicks.append(square_selected)
+                    self.square_selected = (row, col)
+                    self.player_clicks.append(self.square_selected)
 
                 if len(self.player_clicks) == 2:
-                    move = Move(self.player_clicks[0], self.player_clicks[1], game_state.board)
+                    move = Move(self.player_clicks[0], self.player_clicks[1], game_state)
                     if move in self.valid_moves:
                         game_state.make_move(move)
+                        self.move = move
                         self.sounds["move"].play() if move.piece_captured == "--" else self.sounds["capture"].play()
-
                         self.move_made = True
+
                         self.square_selected = ()
                         self.player_clicks = []
                     else:
-                        self.player_clicks = [square_selected]
+                        self.player_clicks = [self.square_selected]
 
         if self.move_made:
             self.valid_moves = self.game_rules.get_valid_moves()
             self.move_made = False
+
+            if not self.undoing_move:
+                print(self.move.get_chess_notation())
+            else:
+                self.undoing_move = False

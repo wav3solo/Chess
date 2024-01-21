@@ -4,13 +4,13 @@ from ches_ui import ChessUI
 
 
 def main():
-
     game_state = GameState()
 
     chess_ui = ChessUI(game_state)
     chess_ui.load_resources()
 
     while True:
+
         chess_ui.handle_events(game_state)
         chess_ui.draw_game_state(game_state)
 
