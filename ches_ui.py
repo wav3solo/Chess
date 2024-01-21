@@ -1,9 +1,11 @@
 import pygame as p
 from chess_engine.move import Move
+from chess_engine.game_state import GameState
+from chess_engine.game_rules import GameRules
 
 
 class ChessUI:
-    def __init__(self, gs):
+    def __init__(self, game_state):
         self.screen = None
         self.width = self.height = 512
         self.max_fps = 15
@@ -13,15 +15,17 @@ class ChessUI:
         self.images = {}
         self.sounds = {}
 
-        self.square_selected = ()
-        self.player_clicks = []
-        self.valid_moves = gs.get_valid_moves()
-        self.move_made = False
-
         p.init()
         p.mixer.init()
         self.screen = p.display.set_mode((self.width, self.height))
         p.display.set_caption("Chess")
+
+        self.game_rules = GameRules(game_state)
+
+        self.square_selected = ()
+        self.player_clicks = []
+        self.valid_moves = self.game_rules.get_valid_moves()
+        self.move_made = False
 
     def load_resources(self):
         for piece in self.pieces:
@@ -30,9 +34,9 @@ class ChessUI:
         self.sounds["move"] = p.mixer.Sound("sounds/move.mp3")
         self.sounds["capture"] = p.mixer.Sound("sounds/capture.mp3")
 
-    def draw_game_state(self, gs):
+    def draw_game_state(self, game_state):
         self.draw_board(self.screen)
-        self.draw_pieces(self.screen, gs.board)
+        self.draw_pieces(self.screen, game_state.board)
 
     def draw_board(self, screen):
         colors = [p.Color("white"), p.Color("gray")]
@@ -50,13 +54,13 @@ class ChessUI:
                     screen.blit(self.images[piece],
                                 p.Rect(c * self.square_size, r * self.square_size, self.square_size, self.square_size))
 
-    def handle_events(self, gs):
+    def handle_events(self, game_state):
         for e in p.event.get():
             if e.type == p.QUIT:
                 exit()
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_LEFT:
-                    gs.undo_move()
+                    game_state.undo_move()
                     self.move_made = True
                 elif e.key == p.K_q or e.key == p.K_ESCAPE:
                     exit()
@@ -74,9 +78,9 @@ class ChessUI:
                     self.player_clicks.append(square_selected)
 
                 if len(self.player_clicks) == 2:
-                    move = Move(self.player_clicks[0], self.player_clicks[1], gs.board)
+                    move = Move(self.player_clicks[0], self.player_clicks[1], game_state.board)
                     if move in self.valid_moves:
-                        gs.make_move(move)
+                        game_state.make_move(move)
                         self.sounds["move"].play() if move.piece_captured == "--" else self.sounds["capture"].play()
 
                         self.move_made = True
@@ -86,5 +90,5 @@ class ChessUI:
                         self.player_clicks = [square_selected]
 
         if self.move_made:
-            self.valid_moves = gs.get_valid_moves()
+            self.valid_moves = self.game_rules.get_valid_moves()
             self.move_made = False

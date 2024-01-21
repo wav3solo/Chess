@@ -5,14 +5,14 @@ from ches_ui import ChessUI
 
 def main():
 
-    gs = GameState()
+    game_state = GameState()
 
-    chess_ui = ChessUI(gs)
+    chess_ui = ChessUI(game_state)
     chess_ui.load_resources()
 
     while True:
-        chess_ui.handle_events(gs)
-        chess_ui.draw_game_state(gs)
+        chess_ui.handle_events(game_state)
+        chess_ui.draw_game_state(game_state)
 
         p.time.Clock().tick(chess_ui.max_fps)
         p.display.flip()
