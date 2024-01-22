@@ -167,7 +167,32 @@ class GameRules:
 
     def get_king_moves(self, r, c, moves):
         directions = self.all_possible_directions
-        self.get_linear_moves(r, c, moves, directions, 1)
+
+        ally_color = "w" if self.game_state.isWhiteToMove else "b"
+
+        for d in directions:
+
+            destination_row = r + d[0]
+            destination_col = c + d[1]
+
+            if is_square_on_board(destination_row, destination_col):
+                destination_piece = self.game_state.board[destination_row][destination_col]
+                if destination_piece[0] != ally_color:
+                    if ally_color == "w":
+                        self.game_state.whites_king_position = (destination_row, destination_col)
+                    else:
+                        self.game_state.blacks_king_position = (destination_row, destination_col)
+
+                    checks, pins, player_in_check \
+                        = self.check_for_checks_and_pins()
+
+                    if not player_in_check:
+                        moves.append(Move((r, c), (destination_row, destination_col), self.game_state))
+
+                    if ally_color == "w":
+                        self.game_state.whites_king_position = (r, c)
+                    else:
+                        self.game_state.blacks_king_position = (r, c)
 
     # __Checks__________________________________________________________________________________________________________
 
@@ -191,13 +216,14 @@ class GameRules:
 
         for j in range(len(directions)):
             d = directions[j]
+
             possible_pin = ()
             for i in range(1, 8):
                 destination_row = source_row + d[0] * i
                 destination_col = source_col + d[1] * i
                 if is_square_on_board(destination_row, destination_col):
                     destination_piece = self.game_state.board[destination_row][destination_col]
-                    if destination_piece[0] == ally_color:
+                    if destination_piece[0] == ally_color and destination_piece[1] != "K":
                         if possible_pin == ():
                             possible_pin = (destination_row, destination_col, d[0], d[1])
                         else:

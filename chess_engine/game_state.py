@@ -23,7 +23,7 @@ class GameState:
         self.whites_king_position = (7, 4)
         self.blacks_king_position = (0, 4)
 
-        self.moveLog = []
+        self.move_log = []
 
     def make_move(self, move):
         self.board[move.source_row][move.source_col] = "--"
@@ -35,13 +35,13 @@ class GameState:
         elif move.piece_moved == "bK":
             self.blacks_king_position = (move.destination_row, move.destination_col)
 
-        self.moveLog.append(move)
+        self.move_log.append(move)
 
         self.isWhiteToMove = not self.isWhiteToMove
 
     def undo_move(self):
-        if len(self.moveLog) != 0:
-            move = self.moveLog.pop()
+        if len(self.move_log) != 0:
+            move = self.move_log.pop()
             print("Undoing the latest move: " + move.get_chess_notation())
 
             self.board[move.source_row][move.source_col] = move.piece_moved

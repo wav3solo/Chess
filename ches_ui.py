@@ -6,12 +6,17 @@ from chess_engine.game_rules import GameRules
 class ChessUI:
     def __init__(self, game_state):
 
+        self.game_state = game_state
+
         self.screen = None
         self.width = self.height = 512
         self.max_fps = 15
+
         self.board_dimension = 8
         self.square_size = self.width // self.board_dimension
+
         self.pieces = ["wR", "wN", "wB", "wQ", "wK", "wP", "bR", "bN", "bB", "bQ", "bK", "bP"]
+
         self.images = {}
         self.sounds = {}
 
@@ -37,13 +42,14 @@ class ChessUI:
 
         self.sounds["move"] = p.mixer.Sound("sounds/move.mp3")
         self.sounds["capture"] = p.mixer.Sound("sounds/capture.mp3")
+        self.sounds["check"] = p.mixer.Sound("sounds/check.mp3")
 
     def draw_game_state(self, game_state):
         self.draw_board(self.screen)
         self.draw_pieces(self.screen, game_state.board)
 
     def draw_board(self, screen):
-        colors = [p.Color("white"), p.Color("gray")]
+        colors = [p.Color("#e8d6b4"), p.Color("#b18a67")]
         for c in range(self.board_dimension):
             for r in range(self.board_dimension):
                 color = colors[((r + c) % 2)]
@@ -64,11 +70,12 @@ class ChessUI:
                 exit()
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_LEFT or e.key == p.K_SPACE:
+                    self.undoing_move = True
+                    if len(self.game_state.move_log) != 0:
+                        self.sounds["move"].play()
+
                     game_state.undo_move()
 
-                    self.undoing_move = True
-
-                    self.sounds["move"].play()
                     self.move_made = True
                 elif e.key == p.K_q or e.key == p.K_ESCAPE:
                     exit()
@@ -90,7 +97,6 @@ class ChessUI:
                     if move in self.valid_moves:
                         game_state.make_move(move)
                         self.move = move
-                        self.sounds["move"].play() if move.piece_captured == "--" else self.sounds["capture"].play()
                         self.move_made = True
 
                         self.square_selected = ()
@@ -104,5 +110,12 @@ class ChessUI:
 
             if not self.undoing_move:
                 print(self.move.get_chess_notation())
+
+                if self.game_state.player_in_check:
+                    self.sounds["check"].play()
+                elif self.move.piece_captured == "--":
+                    self.sounds["move"].play()
+                else:
+                    self.sounds["capture"].play()
             else:
                 self.undoing_move = False
