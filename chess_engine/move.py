@@ -10,12 +10,15 @@ class Move:
 
     def __init__(self, source_square, destination_square, game_state):
         self.game_state = game_state
+
         self.source_row = source_square[0]
         self.source_col = source_square[1]
         self.destination_row = destination_square[0]
         self.destination_col = destination_square[1]
+
         self.piece_moved = game_state.board[self.source_row][self.source_col]
         self.piece_captured = game_state.board[self.destination_row][self.destination_col]
+
         self.move_id = self.source_row * 1000 + self.source_col * 100 + self.destination_row * 10 + self.destination_col
 
     def get_chess_notation(self):

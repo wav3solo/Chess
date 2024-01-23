@@ -11,8 +11,8 @@ def main():
 
     while True:
 
-        chess_ui.handle_events(game_state)
-        chess_ui.draw_game_state(game_state)
+        chess_ui.handle_events()
+        chess_ui.draw_game_state()
 
         p.time.Clock().tick(chess_ui.max_fps)
         p.display.flip()
