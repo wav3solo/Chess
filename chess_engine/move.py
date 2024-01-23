@@ -21,6 +21,7 @@ class Move:
     def get_chess_notation(self):
         is_capture = self.piece_captured != "--"
         is_check = self.game_state.player_in_check
+        is_checkmate = self.game_state.checkmate
         destination_in_chess_notation = self.get_rank_file(self.destination_row, self.destination_col)
 
         chess_notation = self.pieces_to_chess_notation[self.piece_moved]
@@ -32,7 +33,9 @@ class Move:
 
         chess_notation += destination_in_chess_notation
 
-        if is_check:
+        if is_checkmate:
+            chess_notation += "#"
+        elif is_check:
             chess_notation += "+"
 
         return chess_notation

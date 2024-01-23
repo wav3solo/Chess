@@ -11,10 +11,12 @@ class GameState:
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         ]
 
-        self.isWhiteToMove = True
+        self.is_white_to_move = True
 
         self.hasWhiteCastled = False
         self.hasBlackCastled = False
+
+        self.checkmate = False
 
         self.player_in_check = False
         self.checks = []
@@ -24,6 +26,8 @@ class GameState:
         self.blacks_king_position = (0, 4)
 
         self.move_log = []
+        self.pgn_move_log = ""
+        self.pgn_move_number = 1
 
     def make_move(self, move):
         self.board[move.source_row][move.source_col] = "--"
@@ -37,7 +41,7 @@ class GameState:
 
         self.move_log.append(move)
 
-        self.isWhiteToMove = not self.isWhiteToMove
+        self.is_white_to_move = not self.is_white_to_move
 
     def undo_move(self):
         if len(self.move_log) != 0:
@@ -53,4 +57,4 @@ class GameState:
             elif move.piece_moved == "bK":
                 self.blacks_king_position = (move.source_row, move.source_col)
 
-            self.isWhiteToMove = not self.isWhiteToMove
+            self.is_white_to_move = not self.is_white_to_move

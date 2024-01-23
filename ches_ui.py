@@ -43,6 +43,7 @@ class ChessUI:
         self.sounds["move"] = p.mixer.Sound("sounds/move.mp3")
         self.sounds["capture"] = p.mixer.Sound("sounds/capture.mp3")
         self.sounds["check"] = p.mixer.Sound("sounds/check.mp3")
+        self.sounds["checkmate"] = p.mixer.Sound("sounds/checkmate.mp3")
 
     def draw_game_state(self, game_state):
         self.draw_board(self.screen)
@@ -106,10 +107,22 @@ class ChessUI:
 
         if self.move_made:
             self.valid_moves = self.game_rules.get_valid_moves()
+            self.game_state.checkmate = True if len(self.valid_moves) == 0 else False
             self.move_made = False
 
             if not self.undoing_move:
+                if not self.game_state.is_white_to_move:  # it was white's move
+                    self.game_state.pgn_move_log += str(self.game_state.pgn_move_number) + "." + self.move.get_chess_notation() + " "
+                    self.game_state.pgn_move_number += 1
+                else:   # it was black's move
+                    self.game_state.pgn_move_log += self.move.get_chess_notation() + " "
+
                 print(self.move.get_chess_notation())
+
+                if game_state.checkmate:
+                    self.sounds["checkmate"].play()
+                    print("Checkmate! Game was as follows:")
+                    print(self.game_state.pgn_move_log)
 
                 if self.game_state.player_in_check:
                     self.sounds["check"].play()

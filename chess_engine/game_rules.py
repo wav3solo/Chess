@@ -24,9 +24,9 @@ class GameRules:
         moves = []
         self.game_state.checks, self.game_state.pins, self.game_state.player_in_check = self.check_for_checks_and_pins()
 
-        king_row = self.game_state.whites_king_position[0] if self.game_state.isWhiteToMove \
+        king_row = self.game_state.whites_king_position[0] if self.game_state.is_white_to_move \
             else self.game_state.blacks_king_position[0]
-        king_col = self.game_state.whites_king_position[1] if self.game_state.isWhiteToMove \
+        king_col = self.game_state.whites_king_position[1] if self.game_state.is_white_to_move \
             else self.game_state.blacks_king_position[1]
 
         if self.game_state.player_in_check:
@@ -70,8 +70,8 @@ class GameRules:
         for r in range(len(self.game_state.board)):
             for c in range(len(self.game_state.board[r])):
                 piece_color = self.game_state.board[r][c][0]
-                if ((piece_color == "w" and self.game_state.isWhiteToMove)
-                        or (piece_color == "b" and not self.game_state.isWhiteToMove)):
+                if ((piece_color == "w" and self.game_state.is_white_to_move)
+                        or (piece_color == "b" and not self.game_state.is_white_to_move)):
                     piece = self.game_state.board[r][c][1]
                     self.move_functions[piece](r, c, moves)
 
@@ -82,7 +82,7 @@ class GameRules:
     def get_linear_moves(self, r, c, moves, directions, move_range):
         piece_pinned, pin_direction = self.get_pin_directions(r, c)
 
-        enemy_color = "b" if self.game_state.isWhiteToMove else "w"
+        enemy_color = "b" if self.game_state.is_white_to_move else "w"
         for d in directions:
             for i in range(1, (move_range + 1)):
                 destination_row = r + d[0] * i
@@ -103,7 +103,7 @@ class GameRules:
     def get_pawn_moves(self, r, c, moves):
         piece_pinned, pin_direction = self.get_pin_directions(r, c)
 
-        if self.game_state.isWhiteToMove:
+        if self.game_state.is_white_to_move:
             if self.game_state.board[r - 1][c] == "--":
                 if not piece_pinned or pin_direction == (-1, 0):
                     moves.append(Move((r, c), (r - 1, c), self.game_state))
@@ -145,7 +145,7 @@ class GameRules:
         piece_pinned, pin_direction = self.get_pin_directions(r, c)
 
         knight_moves = ((1, 2), (-1, 2), (1, -2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1))
-        ally_color = "w" if self.game_state.isWhiteToMove else "b"
+        ally_color = "w" if self.game_state.is_white_to_move else "b"
 
         for m in knight_moves:
             destination_row = r + m[0]
@@ -168,7 +168,7 @@ class GameRules:
     def get_king_moves(self, r, c, moves):
         directions = self.all_possible_directions
 
-        ally_color = "w" if self.game_state.isWhiteToMove else "b"
+        ally_color = "w" if self.game_state.is_white_to_move else "b"
 
         for d in directions:
 
@@ -201,7 +201,7 @@ class GameRules:
         checks = []
         player_in_check = False
 
-        if self.game_state.isWhiteToMove:
+        if self.game_state.is_white_to_move:
             enemy_color = "b"
             ally_color = "w"
             source_row = self.game_state.whites_king_position[0]
@@ -230,12 +230,34 @@ class GameRules:
                             break
                     elif destination_piece[0] == enemy_color:
                         piece_type = destination_piece[1]
-                        if (0 <= j <= 3 and piece_type == "R") or \
-                                (4 <= j <= 7 and piece_type == "B") or \
-                                (i == 1 and piece_type == "P" and ((enemy_color == "w" and 6 <= j <= 7) or
-                                                                   (enemy_color == "b" and 4 <= j <= 5))) or \
-                                (piece_type == "Q") or \
-                                (i == 1 and piece_type == "K"):
+                        #  looking to all directions
+                        is_queen_attacking = piece_type == "Q"
+
+                        # king can't give a check, but we need this line for kings, so they don't collide
+                        is_king_attacking = (i == 1 and piece_type == "K")
+
+                        # 0 to 3 are orthogonal directions
+                        is_rook_attacking = 0 <= j <= 3 and piece_type == "R"
+
+                        # 4 to 7 are diagonal directions
+                        is_bishop_attacking = 4 <= j <= 7 and piece_type == "B"
+
+                        # i=1, because pawn reaches only 1 square
+                        # 4 to 5 are white pawns directions
+                        # and 6 to 7 are black pawns directions
+                        # we are looking for pawn checks from the kings perspective (as if the king were a pawn)
+                        is_white_pawn = 6 <= j <= 7
+                        is_black_pawn = 4 <= j <= 5
+                        is_pawn = i == 1 and piece_type == "P"
+                        white_under_check_by_black_pawn = ally_color == "w" and is_pawn and is_black_pawn
+                        black_under_check_by_white_pawn = ally_color == "b" and is_pawn and is_white_pawn
+                        is_pawn_attacking = white_under_check_by_black_pawn or black_under_check_by_white_pawn
+
+                        attacks = [
+                            is_queen_attacking, is_king_attacking, is_rook_attacking, is_bishop_attacking,
+                            is_pawn_attacking]
+
+                        if any(attacks):
                             if possible_pin == ():
                                 player_in_check = True
                                 checks.append((destination_row, destination_col, d[0], d[1]))
